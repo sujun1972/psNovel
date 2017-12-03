@@ -9,6 +9,7 @@ import scrapy
 
 
 class Novel(scrapy.Item):
+    id = scrapy.Field()
     # 作品名称
     title = scrapy.Field()
     # 作者
@@ -17,6 +18,8 @@ class Novel(scrapy.Item):
     intro = scrapy.Field()
     # 封面图片
     poster = scrapy.Field()
+    images = scrapy.Field()
+    image_urls = scrapy.Field()
     # 标签
     tags = scrapy.Field()
     # 关键字
@@ -54,3 +57,4 @@ class Chapter(scrapy.Item):
     chapter_vip = scrapy.Field()
     chapter_word_count = scrapy.Field()
     chapter_updated = scrapy.Field()
+    chapter_locked = scrapy.Field()

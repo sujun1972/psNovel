@@ -17,12 +17,14 @@ class JjwxcSpider(scrapy.Spider):
             # 'http://www.jjwxc.net/onebook.php?novelid=65066'
         ]
         for url in urls:
-            yield scrapy.Request(url=url, callback=self.parse)
+            novel_id = url.split("?novelid=")[-1]
+            yield scrapy.Request(url=url, callback=self.parse, meta={'novel_id': novel_id})
 
     def parse(self, response):
         soup = BeautifulSoup(response.body, "lxml")
-
+        novel_id = response.meta.get('novel_id')
         novel = Novel()
+        novel['id'] = novel_id
         novel['title'] = response.xpath('//span[@class="bigtext"]//span/text()').extract_first()
         novel['author'] = response.xpath('//span[@itemprop="author"]/text()').extract_first()
 
@@ -69,8 +71,11 @@ class JjwxcSpider(scrapy.Spider):
             novel['comment'] = ''
 
         poster = parse.urlsplit(soup.find('img', {"itemprop": "image"})["src"]).path.split('/')[-1]
-
+        poster_url = soup.find('img', {"itemprop": "image"})["src"]
         novel["poster"] = poster
+        novel["images"] = [poster]
+        novel["image_urls"] = [poster_url]
+
         tags = []
         html_tags = soup.findAll("div", {"class": "smallreadbody"})[-1].findAll("font")
         for html_tag in html_tags:
@@ -103,7 +108,7 @@ class JjwxcSpider(scrapy.Spider):
                 else:
                     chapter['chapter_vip'] = "Yes"
                     chapter['chapter_url'] = soup_tds[1].find('a')['rel']
-                chapter['novel_id'] = 0
+                chapter['novel_id'] = novel_id
                 chapter['chapter_group'] = current_group
                 chapter['chapter_id'] = soup_tds[0].text.strip()
                 chapter['chapter_title'] = soup_tds[1].text.strip()
@@ -114,10 +119,13 @@ class JjwxcSpider(scrapy.Spider):
                 else:
                     chapter['chapter_updated'] = soup_tds[5].text.strip()
                 if (chapter['chapter_vip'] == "No"):
-                    yield scrapy.Request(url=chapter['chapter_url'], callback=self.parseChapter)
+                    yield scrapy.Request(url=chapter['chapter_url'],
+                                         callback=self.parse_chapter, meta={'chapter': chapter})
         yield(novel)
 
-    def parseChapter(self, response):
+    def parse_chapter(self, response):
+        chapter = response.meta.get('chapter')
+
         soup = BeautifulSoup(response.body, "lxml")
         soup_text = soup.find("div", {"class": "noveltext"})
         soup_divs = soup.findAll("div")
@@ -133,4 +141,6 @@ class JjwxcSpider(scrapy.Spider):
         for line in lines:
             chapter_lines.append(line.strip())
         chapter_content = "\r\n".join(chapter_lines)
-        print(chapter_content)
+        chapter['chapter_content'] = chapter_content
+
+        yield(chapter)
