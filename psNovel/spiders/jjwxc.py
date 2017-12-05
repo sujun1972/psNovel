@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import re
 import scrapy
 from scrapy.selector import Selector
 from psNovel.items import Novel, Chapter
@@ -12,15 +13,22 @@ class JjwxcSpider(scrapy.Spider):
 
     def start_requests(self):
         urls = [
+            "http://www.jjwxc.net/", #首页
             # 'http://www.jjwxc.net/onebook.php?novelid=1888526',
-            'http://www.jjwxc.net/onebook.php?novelid=3160517'
+            #'http://www.jjwxc.net/onebook.php?novelid=3160517'
             # 'http://www.jjwxc.net/onebook.php?novelid=65066'
         ]
         for url in urls:
-            novel_id = url.split("?novelid=")[-1]
-            yield scrapy.Request(url=url, callback=self.parse, meta={'novel_id': novel_id})
+            yield scrapy.Request(url=url, callback=self.parse_homepages)
 
-    def parse(self, response):
+    def parse_homepages(self, response):
+        novel_list = re.findall(r'novelid=\d+', str(response.body))
+        for n in novel_list:
+            novel_id = n.replace("novelid=", "")
+            url = "http://www.jjwxc.net/onebook.php?novelid=" + novel_id
+            yield scrapy.Request(url=url, callback=self.parse_novel, meta={'novel_id': novel_id})
+
+    def parse_novel(self, response):
         soup = BeautifulSoup(response.body, "lxml")
         novel_id = response.meta.get('novel_id')
         novel = Novel()
