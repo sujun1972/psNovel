@@ -111,23 +111,23 @@ class JjwxcSpider(scrapy.Spider):
             else:
                 chapter = Chapter()
                 if soup_tds[1].find('a').has_attr("href"):
-                    chapter['chapter_vip'] = "No"
-                    chapter['chapter_url'] = soup_tds[1].find('a')['href']
+                    chapter['vip'] = "No"
+                    chapter['url'] = soup_tds[1].find('a')['href']
                 else:
-                    chapter['chapter_vip'] = "Yes"
-                    chapter['chapter_url'] = soup_tds[1].find('a')['rel']
+                    chapter['vip'] = "Yes"
+                    chapter['url'] = soup_tds[1].find('a')['rel']
                 chapter['novel_id'] = novel_id
-                chapter['chapter_group'] = current_group
-                chapter['chapter_id'] = soup_tds[0].text.strip()
-                chapter['chapter_title'] = soup_tds[1].text.strip()
-                chapter['chapter_summary'] = soup_tds[2].text.strip()
-                chapter['chapter_word_count'] = soup_tds[3].text.strip()
+                chapter['group'] = current_group
+                chapter['novel_id'] = soup_tds[0].text.strip()
+                chapter['title'] = soup_tds[1].text.strip()
+                chapter['summary'] = soup_tds[2].text.strip()
+                chapter['word_count'] = soup_tds[3].text.strip()
                 if(len(soup_tds) == 5):
-                    chapter['chapter_updated'] = soup_tds[4].text.strip()
+                    chapter['updated'] = soup_tds[4].text.strip()
                 else:
-                    chapter['chapter_updated'] = soup_tds[5].text.strip()
-                if (chapter['chapter_vip'] == "No"):
-                    yield scrapy.Request(url=chapter['chapter_url'],
+                    chapter['updated'] = soup_tds[5].text.strip()
+                if (chapter['vip'] == "No"):
+                    yield scrapy.Request(url=chapter['url'],
                                          callback=self.parse_chapter, meta={'chapter': chapter})
         yield(novel)
 
@@ -149,6 +149,6 @@ class JjwxcSpider(scrapy.Spider):
         for line in lines:
             chapter_lines.append(line.strip())
         chapter_content = "\r\n".join(chapter_lines)
-        chapter['chapter_content'] = chapter_content
+        chapter['content'] = chapter_content
 
         yield(chapter)

@@ -11,8 +11,10 @@ from scrapy.pipelines.images import ImagesPipeline
 
 
 class PsnovelPipeline(object):
+
     def process_item(self, item, spider):
-        print(item)
+        print(item["id"], item["title"])
+        input("---------------")
         if isinstance(item, Novel):
             print("this is Novel")
         if isinstance(item, Chapter):
